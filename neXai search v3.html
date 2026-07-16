@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>neXai - Temukan Dunia Baru</title>
+    <!-- Font Google Premium -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: #1f2833;
+            --text-main: #f5f5f7;
+            --text-muted: #8e9297;
+            --accent-glow: #66fcf1;
+            --accent-gold: #c5a880;
+            --glass-bg: rgba(31, 40, 51, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --nav-bg: #151a21;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: 75px;
+            transition: background-color 0.3s;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(11, 12, 16, 0.8);
+            transition: transform 0.3s ease;
+        }
+
+        body.searching-active header {
+            transform: translateY(-100%);
+            position: absolute;
+        }
+
+        .logo-small {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, var(--accent-glow), var(--accent-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+
+        .profile-container {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #2a3543;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--glass-border);
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .profile-avatar.logged-in {
+            border-color: var(--accent-glow);
+        }
+
+        .profile-avatar i {
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* PAGES */
+        .page {
+            display: none;
+            width: 100%;
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 20px;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* BRAND LOGO */
+        .brand-section {
+            text-align: center;
+            padding: 30px 0 20px 0;
+        }
+
+        .brand-logo {
+            font-size: 55px;
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #fff, var(--accent-gold), var(--accent-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 35px rgba(102, 252, 241, 0.15);
+            display: inline-block;
+        }
+
+        /* SEARCH BAR SYSTEM */
+        .search-area-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 25px;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .search-bar-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 2px 8px;
+            transition: all 0.3s;
+        }
+
+        .search-bar-container:focus-within {
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 15px rgba(102, 252, 241, 0.15);
+        }
+
+        .back-search-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            padding: 10px 15px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            padding: 14px 10px 14px 15px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-size: 16px;
+        }
+
+        .search-icon-right {
+            color: var(--text-muted);
+            padding: 10px 15px;
+            font-size: 16px;
+        }
+
+        /* STATE: INPUT ACTIVE */
+        body.searching-active {
+            padding-bottom: 0px;
+        }
+
+        body.searching-active .bottom-nav,
+        body.searching-active .brand-section,
+        body.searching-active .section-title,
+        body.searching-active #feedContainer,
+        body.searching-active #resultsContainer {
+            display: none !important;
+        }
+
+        body.searching-active .page {
+            padding: 10px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-color);
+            z-index: 1000;
+            max-width: 100%;
+            overflow-y: auto;
+        }
+
+        body.searching-active .search-area-wrapper {
+            margin-bottom: 15px;
+        }
+
+        body.searching-active .search-bar-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0;
+            border-bottom: 1px solid var(--glass-border);
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            padding: 5px 0px;
+        }
+
+        body.searching-active .back-search-btn {
+            display: block;
+        }
+
+        /* SUGGESTION */
+        .history-search-suggest {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        body.searching-active .history-search-suggest {
+            display: flex;
+        }
+
+        .suggest-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            font-size: 15px;
+            color: #e8eaed;
+        }
+
+        .suggest-item:active {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .suggest-item i.fa-clock {
+            color: var(--text-muted);
+            margin-right: 20px;
+            font-size: 16px;
+        }
+
+        /* RESULTS STATE */
+        body.results-active .brand-section {
+            display: none !important;
+        }
+
+        body.results-active .search-area-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 99;
+            background: var(--bg-color);
+            padding: 10px 0;
+            margin-bottom: 15px;
+        }
+
+        body.results-active .search-bar-container {
+            background: rgba(255,255,255,0.04);
+        }
+
+        /* BERANDA FEED */
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--accent-gold);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feed-card {
+            background: rgba(31, 40, 51, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .feed-image {
+            width: 100%;
+            height: 160px;
+            background: #151a21;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: var(--accent-gold);
+            position: relative;
+        }
+
+        .feed-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--accent-glow);
+            color: #0b0c10;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .feed-content {
+            padding: 15px;
+        }
+
+        .feed-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .feed-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .feed-desc {
+            font-size: 13px;
+            color: #bdc1c6;
+            line-height: 1.5;
+        }
+
+        /* SEARCH CARDS */
+        .search-card {
+            background: rgba(31, 40, 51, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 15px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .card-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            color: #0b0c10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .card-meta {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-site-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .card-url {
+            font-size: 11px;
+            color: var(--accent-glow);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #8ab4f8;
+            text-decoration: none;
+            margin-bottom: 6px;
+            display: inline-block;
+        }
+
+        .card-description {
+            font-size: 13.5px;
+            line-height: 1.5;
+            color: #bdc1c6;
+        }
+
+        /* HISTORY */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-info h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .history-info span {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .btn-delete-history {
+            background: transparent;
+            border: none;
+            color: #ff5e5e;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background-color: var(--nav-bg);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 25%;
+            padding: 8px 0;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item.active {
+            color: var(--accent-glow);
+        }
+
+        /* HALAMAN PROFIL UTUH */
+        .profile-page-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding-bottom: 40px;
+        }
+
+        .sheet-profile-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        /* INTERAKTIF AVATAR WRAPPER UNTUK UPLOAD */
+        .sheet-avatar-wrapper {
+            position: relative;
+            width: 85px;
+            height: 85px;
+            margin: 0 auto 12px auto;
+            border-radius: 50%;
+            cursor: pointer;
+            overflow: hidden;
+            border: 3px solid var(--accent-gold);
+            box-shadow: 0 0 15px rgba(197, 168, 128, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .sheet-avatar-wrapper:active {
+            transform: scale(0.95);
+        }
+
+        .sheet-avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* OVERLAY TOMBOL EDIT FOTO */
+        .avatar-edit-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .sheet-avatar-wrapper:hover .avatar-edit-overlay,
+        .sheet-avatar-wrapper:active .avatar-edit-overlay {
+            opacity: 1;
+        }
+
+        .avatar-edit-overlay i {
+            color: var(--text-main);
+            font-size: 18px;
+        }
+
+        .sheet-greeting {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-main);
+        }
+
+        .user-email-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .btn-manage-account {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--accent-gold);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .menu-group-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .menu-item-tile {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            gap: 16px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .menu-item-tile:last-child {
+            border-bottom: none;
+        }
+
+        .tile-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-gold);
+            font-size: 16px;
+        }
+
+        .tile-content {
+            flex-grow: 1;
+        }
+
+        .tile-content h4 {
+            font-size: 14.5px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .tile-content p {
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        .tile-action {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 10px;
+            border-radius: 10px;
+        }
+
+        body.incognito-mode {
+            --accent-glow: #a855f7;
+            --accent-gold: #c084fc;
+            --bg-color: #090514;
+        }
+
+        .sheet-footer {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px 0;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* HALAMAN LOGIN DAN DAFTAR FISIK */
+        .auth-container {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 30px 24px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-top: 20px;
+        }
+
+        .auth-logo {
+            font-size: 40px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-glow), var(--accent-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            color: white;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 10px rgba(102, 252, 241, 0.1);
+        }
+
+        .btn-auth-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent-gold), #e0c39e);
+            color: #0b0c10;
+            border: none;
+            padding: 14px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+
+        .btn-auth-submit:active {
+            transform: scale(0.98);
+        }
+
+        .auth-switch-link {
+            display: block;
+            margin-top: 20px;
+            font-size: 13.5px;
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+
+        .auth-switch-link span {
+            color: var(--accent-glow);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo-small" onclick="switchPage('beranda')">neXai</div>
+        <div class="profile-container" onclick="switchPage('profil')">
+            <div class="profile-avatar" id="userProfileBtn">
+                <i class="fa-solid fa-user" id="profileDefaultIcon"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= PAGE 1: BERANDA ================= -->
+    <div id="berandaPage" class="page active">
+        <div class="brand-section">
+            <h1 class="brand-logo">neXai</h1>
+        </div>
+        
+        <div class="search-area-wrapper">
+            <div class="search-bar-container">
+                <button class="back-search-btn" onclick="cancelSearch()"><i class="fa-solid fa-arrow-left"></i></button>
+                <input type="text" class="search-bar" id="berandaSearchInput" placeholder="Tanya neXai..." onfocus="enterSearchMode('berandaSearchInput')" onkeydown="checkSearchSubmit(event, 'berandaSearchInput')">
+                <i class="fa-solid fa-magnifying-glass search-icon-right"></i>
+            </div>
+            <div class="history-search-suggest" id="berandaSuggestions"></div>
+        </div>
+
+        <h2 class="section-title"><i class="fa-solid fa-square-rss"></i> Update Terbaru</h2>
+        <div id="feedContainer"></div>
+    </div>
+
+    <!-- ================= PAGE 2: TELUSURI ================= -->
+    <div id="telusuriPage" class="page">
+        <div class="brand-section">
+            <h1 class="brand-logo">neXai</h1>
+        </div>
+
+        <div class="search-area-wrapper">
+            <div class="search-bar-container">
+                <button class="back-search-btn" onclick="cancelSearch()"><i class="fa-solid fa-arrow-left"></i></button>
+                <input type="text" class="search-bar" id="searchInput" placeholder="Cari sesuatu..." onfocus="enterSearchMode('searchInput')" onkeydown="checkSearchSubmit(event, 'searchInput')">
+                <i class="fa-solid fa-magnifying-glass search-icon-right"></i>
+            </div>
+            <div class="history-search-suggest" id="telusuriSuggestions"></div>
+        </div>
+
+        <div id="resultsContainer">
+            <div class="empty-state">Ketik sesuatu dan tekan Enter untuk mencari website.</div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 3: AKTIVITAS (HISTORY) ================= -->
+    <div id="aktivitasPage" class="page">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+            <button onclick="switchPage('beranda')" style="background: transparent; border: none; color: var(--text-main); font-size: 20px; cursor: pointer; padding: 5px;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <h2 class="section-title" style="margin-bottom: 0;"><i class="fa-solid fa-clock-rotate-left"></i> Aktivitas Kunjungan</h2>
+        </div>
+
+        <!-- Proteksi Halaman Aktivitas Jika Belum Login -->
+        <div id="historyLockState" class="empty-state" style="display: none;">
+            <i class="fa-solid fa-lock" style="font-size: 40px; color: var(--accent-gold); margin-bottom: 15px;"></i>
+            <p>Silakan masuk ke akun terlebih dahulu untuk merekam dan melihat aktivitas penjelajahanmu.</p>
+            <button class="btn-auth-submit" onclick="switchPage('login')" style="max-width: 200px; margin: 15px auto 0 auto;">Ke Halaman Login</button>
+        </div>
+
+        <div class="history-list" id="historyList"></div>
+    </div>
+
+    <!-- ================= PAGE 4: PROFIL (SETTING) ================= -->
+    <div id="profilPage" class="page">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+            <button onclick="switchPage('beranda')" style="background: transparent; border: none; color: var(--text-main); font-size: 20px; cursor: pointer; padding: 5px;">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <h2 class="section-title" style="margin-bottom: 0;"><i class="fa-solid fa-user-gear"></i> Akun & Setelan</h2>
+        </div>
+
+        <div class="profile-page-wrapper">
+            <div class="sheet-profile-card">
+                <!-- Wrapper foto profil yang bisa di-klik untuk upload -->
+                <div class="sheet-avatar-wrapper" onclick="triggerAvatarUpload()">
+                    <img src="" alt="Profile" class="sheet-avatar" id="sheetAvatar">
+                    <div class="avatar-edit-overlay">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                </div>
+                <!-- Input file yang disembunyikan -->
+                <input type="file" id="avatarFileInput" accept="image/*" style="display: none;" onchange="handleAvatarFileChange(event)">
+                
+                <h3 class="sheet-greeting" id="sheetGreeting">Tamu yang terhormat,</h3>
+                <span class="user-email-text" id="sheetEmail">guest@nexai.dev</span>
+                <button class="btn-manage-account" id="mainAccountBtn" onclick="handleAccountAction()">Masuk ke Akun</button>
+            </div>
+
+            <!-- Setelan & Menu Lainnya -->
+            <div class="menu-group-card">
+                <div class="menu-item-tile" onclick="toggleIncognitoMode()">
+                    <div class="tile-icon"><i class="fa-solid fa-user-secret"></i></div>
+                    <div class="tile-content">
+                        <h4>Sesi Samaran Baru</h4>
+                        <p>Telusuri tanpa menyimpan riwayat lokal</p>
+                    </div>
+                    <div class="tile-action" id="incognitoBadge">Mati</div>
+                </div>
+            </div>
+
+            <div class="menu-group-card">
+                <div class="menu-item-tile" onclick="switchPage('aktivitas')">
+                    <div class="tile-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="tile-content">
+                        <h4>Histori Kunjungan</h4>
+                        <p>Lihat jejak website yang kamu buka</p>
+                    </div>
+                </div>
+                <div class="menu-item-tile" onclick="clearRecentHistory()">
+                    <div class="tile-icon"><i class="fa-solid fa-trash-can"></i></div>
+                    <div class="tile-content">
+                        <h4>Hapus Aktivitas Terbaru</h4>
+                        <p>Bersihkan riwayat kunjungan terakhir</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sheet-footer">
+                <span>Kebijakan Privasi</span>
+                <span class="dot-separator">•</span>
+                <span>Persyaratan Layanan</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= PAGE 5: HALAMAN AUTENTIKASI ================= -->
+    <div id="loginPage" class="page">
+        <div class="auth-container">
+            <div class="auth-logo">neXai</div>
+            <h3 id="authTitle" style="margin-bottom: 8px;">Masuk ke Akun</h3>
+            <p id="authSubtitle" style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 25px;">Masukkan kredensial neXai milikmu</p>
+            
+            <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                <!-- INPUT USERNAME -->
+                <div class="form-group">
+                    <label for="authUsername">Username</label>
+                    <input type="text" id="authUsername" placeholder="Masukkan username..." required autocomplete="off">
+                </div>
+                
+                <!-- INPUT EMAIL -->
+                <div class="form-group" id="emailGroup">
+                    <label for="authEmail">Email</label>
+                    <input type="email" id="authEmail" placeholder="nama@neXai.space" required autocomplete="off">
+                </div>
+
+                <!-- INPUT PASSWORD -->
+                <div class="form-group">
+                    <label for="authPassword">Password</label>
+                    <input type="password" id="authPassword" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn-auth-submit" id="btnAuthAction">Masuk Sekarang</button>
+            </form>
+
+            <a class="auth-switch-link" id="authSwitchText" onclick="toggleAuthMode()">
+                Belum punya akun? <span>Daftar Sekarang</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ================= BOTTOM NAVIGATION BAR ================= -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchPage('beranda')" id="nav-beranda">
+            <i class="fa-solid fa-house"></i>
+            <span>Beranda</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('telusuri')" id="nav-telusuri">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span>Telusuri</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('aktivitas')" id="nav-aktivitas">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <span>Aktivitas</span>
+        </div>
+        <div class="nav-item" onclick="switchPage('profil')" id="nav-profil">
+            <i class="fa-solid fa-user"></i>
+            <span>Profil</span>
+        </div>
+    </nav>
+
+    <script>
+        const newsFeed = [
+            {
+                title: "KAI Services buka lowongan lulusan SMA",
+                badge: "Berita Baru",
+                desc: "Pendaftaran posisi tenaga perawatan sarana kereta api ini dibuka mulai 14 sampai 16 Juli 2026. Buruan cek link resminya!",
+                date: "Kamis, 16 Juli 2026",
+                iconClass: "fa-solid fa-train-subway"
+            },
+            {
+                title: "Nexus OS meluncurkan Versi Update Terbaru",
+                badge: "Web Baru",
+                desc: "Kini simulator iOS 15 Pro Max di web buatan developer lokal sudah support sistem rotasi landscape otomatis dan kontrol seret presisi.",
+                date: "Rabu, 15 Juli 2026",
+                iconClass: "fa-solid fa-mobile-screen-button"
+            },
+            {
+                title: "KomikNesia tambah koleksi Manhua & Manhwa",
+                badge: "Update Web",
+                desc: "Ratusan judul komik petualangan isekai fantasi terbaru sudah diterjemahkan secara lengkap ke Bahasa Indonesia.",
+                date: "Selasa, 14 Juli 2026",
+                iconClass: "fa-solid fa-book-open-reader"
+            }
+        ];
+
+        const websitesDatabase = [
+    { 
+        id: 1,
+        name: "KomikNesia",
+        url: "https://komiknesia.id",
+        description: "Platform baca manga, manhwa, dan manhua online terlengkap bahasa Indonesia." 
+    },
+    
+    { 
+        id: 2,
+        name: "GitHub",
+        url: "https://github.com", //  Sekarang sudah pakai koma!
+        description: "Penyedia hosting kode software, kolaborasi, dan integrasi web developer terlengkap." 
+    },
+    
+    { 
+        id: 3,
+        name: "Netlify.com",
+        url: "https://netlify.com",
+        description: "Penyedia hosting kode software, dan integrasi web developer untuk test." 
+    },
+    
+    { 
+        id: 4, 
+        name: "PhotoShort",
+        url: "https://photoshort.netlify.netlify.app",
+        description: "Platform web praktis untuk modifikasi gambar dan optimasi foto online." 
+    },
+    
+    { 
+        id: 5,
+        name: "Hdku ai.id",
+        url: "https://pitnewbie.github.io/hdku-ai.id/",
+        description: "web ai dengan tools penghd foto dan removebg, dll." 
+    },
+    
+        { 
+        id: 6,
+        name: "NewAppStore",
+        url: "https://pitnewbie.github.io/NewAppStore/",
+        description: "Download aplikasi lokal, jadilah developer aplikasi sendiri." 
+    },
+    
+        { 
+        id: 7,
+        name: "ping sinyal",
+        url: "https://pitnewbie.github.io/SpeedTest.App/",
+        description: "Tes jaringan kamu dengan sekali klik." 
+    },
+    
+        { 
+        id: 8,
+        name: "Tabunganku Pro",
+        url: "https://pitnewbie.github.io/Tabunganku/",
+        description: "Tabung uang buat brli barang impian kamu." 
+    }
+    
+];
+
+
+        let isLoggedIn = false;
+        let userData = null;
+        let isIncognito = false;
+        let isRegisterMode = false;
+        
+        let searchKeywordsHistory = JSON.parse(localStorage.getItem('nexai_keywords_history')) || [
+          ];
+        let clickHistory = JSON.parse(localStorage.getItem('nexai_click_history')) || [];
+        let activeInputId = "searchInput";
+        let lastSearchQuery = "";
+
+        window.onload = () => {
+            renderFeed();
+            checkLoginState();
+            renderHistoryList();
+        };
+
+        /* ================= MANAGEMENT HALAMAN ================= */
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            
+            const targetPage = document.getElementById(`${pageId}Page`);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            const navBtn = document.getElementById(`nav-${pageId}`);
+            if (navBtn) navBtn.classList.add('active');
+
+            document.body.classList.remove('searching-active', 'results-active');
+
+            if (pageId === 'profil') {
+                updateProfilePageUI();
+            }
+
+            if (pageId === 'beranda' || pageId === 'aktivitas') {
+                lastSearchQuery = ""; 
+                document.getElementById('berandaSearchInput').value = "";
+                document.getElementById('searchInput').value = "";
+            }
+
+            if (pageId === 'aktivitas') {
+                renderHistoryList();
+            }
+
+            if (pageId === 'telusuri') {
+                if (lastSearchQuery) {
+                    document.body.classList.add('results-active');
+                    document.getElementById('searchInput').value = lastSearchQuery;
+                    renderSearchResults(lastSearchQuery);
+                } else {
+                    document.getElementById('searchInput').value = ""; 
+                    document.getElementById('resultsContainer').innerHTML = `<div class="empty-state">Ketik sesuatu dan tekan Enter untuk mencari website.</div>`;
+                }
+            }
+        }
+
+        /* ================= SAMARAN (INCOGNITO) ================= */
+        function toggleIncognitoMode() {
+            isIncognito = !isIncognito;
+            const badge = document.getElementById('incognitoBadge');
+            
+            if (isIncognito) {
+                document.body.classList.add('incognito-mode');
+                if (badge) { badge.textContent = "Aktif"; badge.style.color = "#a855f7"; }
+                alert("Sesi Samaran Aktif! Riwayat pencarian & kunjungan tidak akan dicatat.");
+            } else {
+                document.body.classList.remove('incognito-mode');
+                if (badge) { badge.textContent = "Mati"; badge.style.color = "var(--text-muted)"; }
+                alert("Sesi Samaran Dinonaktifkan.");
+            }
+        }
+
+        /* ================= PENCARIAN & HISTORY KUNJUNGAN ================= */
+        function enterSearchMode(inputId) {
+            activeInputId = inputId;
+            document.body.classList.add('searching-active');
+            document.body.classList.remove('results-active');
+            renderSuggestionsList(inputId);
+        }
+
+        function cancelSearch() {
+            document.body.classList.remove('searching-active');
+            if (lastSearchQuery) {
+                document.getElementById('berandaSearchInput').value = lastSearchQuery;
+                document.getElementById('searchInput').value = lastSearchQuery;
+                document.body.classList.add('results-active');
+                renderSearchResults(lastSearchQuery);
+            } else {
+                document.getElementById('berandaSearchInput').value = "";
+                document.getElementById('searchInput').value = "";
+                document.body.classList.remove('results-active');
+            }
+        }
+
+        function renderSuggestionsList(inputId) {
+            const containerId = inputId === 'berandaSearchInput' ? 'berandaSuggestions' : 'telusuriSuggestions';
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+
+            searchKeywordsHistory.forEach((keyword) => {
+                const item = document.createElement('div');
+                item.className = 'suggest-item';
+                item.innerHTML = `
+                    <i class="fa-regular fa-clock"></i>
+                    <span>${keyword}</span>
+                `;
+                item.onclick = () => {
+                    document.getElementById(inputId).value = keyword;
+                    executeSearch(keyword);
+                };
+                container.appendChild(item);
+            });
+        }
+
+        function checkSearchSubmit(e, inputId) {
+            if (e.key === 'Enter') {
+                const query = document.getElementById(inputId).value.trim();
+                if (query) executeSearch(query);
+            }
+        }
+
+        function executeSearch(query) {
+            lastSearchQuery = query;
+            if (!searchKeywordsHistory.includes(query) && !isIncognito) {
+                searchKeywordsHistory.unshift(query);
+                if (searchKeywordsHistory.length > 10) searchKeywordsHistory.pop();
+                localStorage.setItem('nexai_keywords_history', JSON.stringify(searchKeywordsHistory));
+            }
+            if (activeInputId === 'berandaSearchInput') {
+                switchPage('telusuri');
+            }
+            document.getElementById('searchInput').value = query;
+            document.body.classList.remove('searching-active');
+            document.body.classList.add('results-active');
+            renderSearchResults(query);
+        }
+
+        function renderSearchResults(query) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.innerHTML = "";
+
+            const filtered = websitesDatabase.filter(web => 
+                web.name.toLowerCase().includes(query.toLowerCase()) || 
+                web.description.toLowerCase().includes(query.toLowerCase())
+            );
+
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = `<div class="empty-state">Tidak ada hasil pencarian untuk "${query}".</div>`;
+                return;
+            }
+
+            filtered.forEach(web => {
+                const initialLetter = web.name.charAt(0).toUpperCase();
+                const card = document.createElement('div');
+                card.className = 'search-card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="card-icon">${initialLetter}</div>
+                        <div class="card-meta">
+                            <span class="card-site-name">${web.name}</span>
+                            <a href="${web.url}" target="_blank" class="card-url" onclick="trackClick('${web.name}', '${web.url}')">${web.url}</a>
+                        </div>
+                    </div>
+                    <a href="${web.url}" target="_blank" class="card-title" onclick="trackClick('${web.name}', '${web.url}')">${web.name} | ${web.description.substring(0, 50)}...</a>
+                    <p class="card-description">${web.description}</p>
+                `;
+                resultsContainer.appendChild(card);
+            });
+        }
+
+        function trackClick(webName, webUrl) {
+            if (isIncognito || !isLoggedIn) return; 
+
+            const timestamp = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + " - " + new Date().toLocaleDateString('id-ID');
+            const logEntry = { name: webName, url: webUrl, time: timestamp };
+
+            clickHistory.unshift(logEntry);
+            if (clickHistory.length > 20) clickHistory.pop();
+
+            localStorage.setItem('nexai_click_history', JSON.stringify(clickHistory));
+            renderHistoryList();
+        }
+
+        function renderHistoryList() {
+            const historyList = document.getElementById('historyList');
+            const lockState = document.getElementById('historyLockState');
+            if (!historyList) return;
+
+            if (!isLoggedIn) {
+                lockState.style.display = "block";
+                historyList.style.display = "none";
+                return;
+            }
+
+            lockState.style.display = "none";
+            historyList.style.display = "flex";
+            historyList.innerHTML = "";
+
+            if (clickHistory.length === 0) {
+                historyList.innerHTML = `<div class="empty-state">Belum ada riwayat kunjungan website.</div>`;
+                return;
+            }
+
+            clickHistory.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'history-card';
+                card.innerHTML = `
+                    <div class="history-info" onclick="window.open('${item.url}', '_blank'); trackClick('${item.name}', '${item.url}')" style="cursor:pointer; flex-grow:1;">
+                        <h4>Mengunjungi ${item.name}</h4>
+                        <span style="color: var(--accent-glow); display:block; font-size:12px; margin: 2px 0;">${item.url}</span>
+                        <span><i class="fa-regular fa-clock"></i> ${item.time}</span>
+                    </div>
+                    <button class="btn-delete-history" onclick="deleteHistoryItem(${index})"><i class="fa-solid fa-trash-can"></i></button>
+                `;
+                historyList.appendChild(card);
+            });
+        }
+
+        function deleteHistoryItem(index) {
+            clickHistory.splice(index, 1);
+            localStorage.setItem('nexai_click_history', JSON.stringify(clickHistory));
+            renderHistoryList();
+        }
+
+        function clearRecentHistory() {
+            if (!isLoggedIn) {
+                alert("Harap login terlebih dahulu.");
+                return;
+            }
+            if (clickHistory.length > 0) {
+                clickHistory.shift(); 
+                localStorage.setItem('nexai_click_history', JSON.stringify(clickHistory));
+                renderHistoryList();
+                alert("Satu aktivitas kunjungan terbaru telah dibersihkan.");
+            } else {
+                alert("Tidak ada riwayat aktivitas untuk dihapus.");
+            }
+        }
+
+        function renderFeed() {
+            const feedContainer = document.getElementById('feedContainer');
+            if (!feedContainer) return;
+            feedContainer.innerHTML = "";
+            
+            newsFeed.forEach(feed => {
+                const card = document.createElement('div');
+                card.className = 'feed-card';
+                card.innerHTML = `
+                    <div class="feed-image">
+                        <span class="feed-badge">${feed.badge}</span>
+                        <i class="${feed.iconClass}"></i>
+                    </div>
+                    <div class="feed-content">
+                        <div class="feed-date">${feed.date}</div>
+                        <h3 class="feed-title">${feed.title}</h3>
+                        <p class="feed-desc">${feed.desc}</p>
+                    </div>
+                `;
+                feedContainer.appendChild(card);
+            });
+        }
+
+        /* ================= UPLOAD FOTO PROFIL (AVATAR) ================= */
+        function triggerAvatarUpload() {
+            if (!isLoggedIn) {
+                alert("Kamu harus login terlebih dahulu untuk mengubah foto profil!");
+                return;
+            }
+            document.getElementById('avatarFileInput').click();
+        }
+
+        function handleAvatarFileChange(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validasi ukuran (Maksimal 2MB agar muat di localStorage)
+            if (file.size > 2 * 1024 * 1024) {
+                alert("Ukuran gambar terlalu besar! Maksimal 2MB.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const base64Image = event.target.result;
+
+                // Update data user di variabel lokal dan localStorage
+                userData.avatar = base64Image;
+                localStorage.setItem('nexai_user', JSON.stringify(userData));
+
+                // Update juga database pendaftaran agar saat logout & login lagi fotonya tidak hilang
+                const registeredUser = JSON.parse(localStorage.getItem('registered_nexai_user'));
+                if (registeredUser && registeredUser.username === userData.username) {
+                    registeredUser.avatar = base64Image;
+                    localStorage.setItem('registered_nexai_user', JSON.stringify(registeredUser));
+                }
+
+                // Update UI secara instan
+                checkLoginState();
+                alert("Foto profil berhasil diperbarui!");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /* ================= AUTHENTICATION SYSTEM ================= */
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            const authTitle = document.getElementById('authTitle');
+            const authSubtitle = document.getElementById('authSubtitle');
+            const emailGroup = document.getElementById('emailGroup');
+            const btnAuthAction = document.getElementById('btnAuthAction');
+            const authSwitchText = document.getElementById('authSwitchText');
+            
+            document.getElementById('authForm').reset();
+
+            if (isRegisterMode) {
+                authTitle.textContent = "Buat Akun Baru";
+                authSubtitle.textContent = "Silakan daftarkan identitas lengkapmu";
+                emailGroup.style.display = "block";
+                document.getElementById('authEmail').required = true;
+                btnAuthAction.textContent = "Daftar Akun";
+                authSwitchText.innerHTML = 'Sudah memiliki akun? <span>Masuk Di Sini</span>';
+            } else {
+                authTitle.textContent = "Masuk ke Akun";
+                authSubtitle.textContent = "Masukkan kredensial neXai milikmu";
+                emailGroup.style.display = "none";
+                document.getElementById('authEmail').required = false;
+                btnAuthAction.textContent = "Masuk Sekarang";
+                authSwitchText.innerHTML = 'Belum punya akun? <span>Daftar Sekarang</span>';
+            }
+        }
+
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById('authUsername').value.trim();
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+
+            if (isRegisterMode) {
+                // Proses DAFTAR[span_0](start_span)[span_0](end_span)
+                const newUser = { username, email, password, avatar: "" }; // default avatar kosong
+                localStorage.setItem('registered_nexai_user', JSON.stringify(newUser));
+                alert("Pendaftaran berhasil! Silakan masuk menggunakan akun baru kamu.");
+                
+                toggleAuthMode();
+            } else {
+                // Proses LOGIN[span_1](start_span)[span_1](end_span)
+                const registeredUser = JSON.parse(localStorage.getItem('registered_nexai_user'));
+
+                if (!registeredUser) {
+                    alert("Akun tidak ditemukan! Silakan daftar terlebih dahulu.");
+                    return;
+                }
+
+                if (registeredUser.username === username && registeredUser.password === password) {
+                    localStorage.setItem('nexai_user', JSON.stringify(registeredUser));
+                    checkLoginState();
+                    alert(`Selamat datang kembali, ${username}!`);
+                    switchPage('beranda');
+                } else {
+                    alert("Kombinasi Username atau Password salah!");
+                }
+            }
+        }
+
+        function checkLoginState() {
+            const localUser = localStorage.getItem('nexai_user');
+            const profileBtn = document.getElementById('userProfileBtn');
+            if (!profileBtn) return;
+            
+            if (localUser) {
+                isLoggedIn = true;
+                userData = JSON.parse(localUser);
+                profileBtn.classList.add('logged-in');
+                
+                // Jika user memiliki custom avatar, tampilkan gambarnya di header. Jika tidak, tampilkan inisial
+                if (userData.avatar) {
+                    profileBtn.innerHTML = `<img src="${userData.avatar}" alt="User Profile">`;
+                } else {
+                    profileBtn.innerHTML = `<span style="font-weight: 700; color: var(--accent-glow);">${userData.username.charAt(0).toUpperCase()}</span>`;
+                }
+            } else {
+                isLoggedIn = false;
+                userData = null;
+                profileBtn.classList.remove('logged-in');
+                profileBtn.innerHTML = `<i class="fa-solid fa-user" id="profileDefaultIcon"></i>`;
+            }
+            updateProfilePageUI();
+        }
+
+        function updateProfilePageUI() {
+            const sheetEmail = document.getElementById('sheetEmail');
+            const sheetGreeting = document.getElementById('sheetGreeting');
+            const mainAccountBtn = document.getElementById('mainAccountBtn');
+            const sheetAvatar = document.getElementById('sheetAvatar');
+
+            if (!sheetEmail) return;
+
+            if (isLoggedIn && userData) {
+                sheetEmail.textContent = userData.email;
+                sheetGreeting.textContent = `${userData.username} yang terhormat,`;
+                mainAccountBtn.textContent = "Keluar dari Akun";
+                
+                // Set foto profil utama halaman
+                if (userData.avatar) {
+                    sheetAvatar.src = userData.avatar;
+                } else {
+                    // Avatar default jika belum mengunggah foto
+                    sheetAvatar.src = "https://i.pinimg.com/736x/8f/3e/ff/8f3eff9dc3cf046894c252cb7b640821.jpg";
+                }
+            } else {
+                sheetEmail.textContent = "guest@nexai.dev";
+                sheetGreeting.textContent = "Tamu yang terhormat,";
+                mainAccountBtn.textContent = "Masuk ke Akun";
+                sheetAvatar.src = "https://via.placeholder.com/80/2a3543/ffffff?text=Guest";
+            }
+        }
+
+        function handleAccountAction() {
+            if (isLoggedIn) {
+                if (confirm(`Ingin logout dari neXai?`)) {
+                    localStorage.removeItem('nexai_user');
+                    isLoggedIn = false;
+                    userData = null;
+                    checkLoginState();
+                    switchPage('beranda');
+                }
+            } else {
+                isRegisterMode = false;
+                toggleAuthMode();
+                switchPage('login');
+            }
+        }
+    </script>
+</body>
+</html>
